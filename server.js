@@ -2,44 +2,19 @@
 //da eseguire sul pi (nel mio caso il pi5)
 // server.js
 // da eseguire sul Pi
-
+// server.js – Raspberry Pi 5
 const net = require('net');
-const { keyboard, mouse, Point, Button } = require("@nut-tree-fork/nut-js");
+const { spawn } = require('child_process');
 
-// Impostazioni opzionali (aumentano la velocità)
-keyboard.config.autoDelayMs = 0;
-mouse.config.autoDelayMs = 0;
+const py = spawn('python3', ['uinput_helper.py']);
+py.stdin.setEncoding('utf-8');
 
-const server = net.createServer((socket) => {
-    console.log('Client connesso');
-
-    socket.on('data', async (data) => {
-        try {
-            const event = JSON.parse(data.toString());
-
-            if (event.type === 'keyboard') {
-                await keyboard.type(event.key);
-            }
-
-            else if (event.type === 'mouse') {
-                await mouse.setPosition(new Point(event.x, event.y));
-
-                if (event.button) {
-                    const btn =
-                        event.button === "left" ? Button.LEFT :
-                        event.button === "right" ? Button.RIGHT :
-                        Button.MIDDLE;
-
-                    await mouse.click(btn);
-                }
-            }
-
-        } catch (err) {
-            console.error('Errore parsing:', err);
-        }
+const server = net.createServer(socket => {
+    socket.on('data', data => {
+        py.stdin.write(data.toString() + "\n");
     });
-
-    socket.on('close', () => console.log('Client disconnesso'));
 });
 
-server.listen(3000, () => console.log('Server in ascolto su porta 3000'));
+server.listen(5000, () => {
+    console.log("Server in ascolto su 5000");
+});
